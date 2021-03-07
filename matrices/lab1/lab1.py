@@ -2,65 +2,61 @@ import numpy as np
 import time
 
 
-# i -> m
-# j -> n
-# k -> l
-
-def jki(first, second, m, n, l):
-    multiply = np.zeros((m, n))
-    for j in range(0, n):
-        for k in range(0, l):
-            for i in range(0, n):
+def jki(first, second, SIZE):
+    multiply = np.zeros((SIZE, SIZE))
+    for j in range(0, SIZE):
+        for k in range(0, SIZE):
+            for i in range(0, SIZE):
                 multiply[i][j] += first[i][k] * second[k][j]
     return multiply
 
 
-def jik(first, second, m, n, l):
-    multiply = np.zeros((m, n))
-    for j in range(0, n):
-        for i in range(0, m):
-            for k in range(0, l):
+def jik(first, second, SIZE):
+    multiply = np.zeros((SIZE, SIZE))
+    for j in range(0, SIZE):
+        for i in range(0, SIZE):
+            for k in range(0, SIZE):
                 multiply[i][j] += first[i][k] * second[k][j]
     return multiply
 
 
-def kij(first, second, m, n, l):
-    multiply = np.zeros((m, n))
-    for k in range(0, l):
-        for i in range(0, m):
-            for j in range(0, n):
+def kij(first, second, SIZE):
+    multiply = np.zeros((SIZE, SIZE))
+    for k in range(0, SIZE):
+        for i in range(0, SIZE):
+            for j in range(0, SIZE):
                 multiply[i][j] += first[i][k] * second[k][j]
     return multiply
 
 
-def kji(first, second, m, n, l):
-    multiply = np.zeros((m, n))
-    for k in range(0, l):
-        for j in range(0, n):
-            for i in range(0, m):
+def kji(first, second, SIZE):
+    multiply = np.zeros((SIZE, SIZE))
+    for k in range(0, SIZE):
+        for j in range(0, SIZE):
+            for i in range(0, SIZE):
                 multiply[i][j] += first[i][k] * second[k][j]
     return multiply
 
 
-def ijk(first, second, m, n, l):
-    multiply = np.zeros((m, n))
-    for i in range(0, m):
-        for j in range(0, n):
-            for k in range(0, l):
+def ijk(first, second, SIZE):
+    multiply = np.zeros((SIZE, SIZE))
+    for i in range(0, SIZE):
+        for j in range(0, SIZE):
+            for k in range(0, SIZE):
                 multiply[i][j] += first[i][k] * second[k][j]
     return multiply
 
 
-def ikj(first, second, m, n, l):
-    multiply = np.zeros((m, n))
-    for i in range(0, m):
-        for j in range(0, n):
-            for k in range(0, l):
+def ikj(first, second, SIZE):
+    multiply = np.zeros((SIZE, SIZE))
+    for i in range(0, SIZE):
+        for k in range(0, SIZE):
+            for j in range(0, SIZE):
                 multiply[i][j] += first[i][k] * second[k][j]
     return multiply
 
 
-sizes = [10, 100, 200]
+sizes = [10, 100, 1000]
 algorithms = [ijk, ikj, kij, kji, jki, jik]
 
 for size in sizes:
@@ -68,6 +64,6 @@ for size in sizes:
     second = np.random.rand(size, size)
     for algorithm in algorithms:
         start = time.time()
-        algorithm(first, second, size, size, size)
+        algorithm(first, second, size)
         stop = time.time()
         print(algorithm.__name__ + " / " + str(size) + ": " + str(stop - start))
