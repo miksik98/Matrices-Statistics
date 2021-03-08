@@ -56,7 +56,7 @@ def ikj(first, second, SIZE):
     return multiply
 
 
-sizes = [100]
+sizes = [10, 100, 1000]
 algorithms = [ijk, ikj, kij, kji, jki, jik]
 
 for size in sizes:
