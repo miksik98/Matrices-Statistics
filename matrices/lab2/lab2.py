@@ -18,8 +18,34 @@ def simple_gauss(A, B, n):
         for j in range(i + 1, n):
             x[i] -= A[i][j] * x[j]
         x[i] = x[i] / A[i][i]
+    print(A)
     return x
 
+
+def gauss_diagonal(A, B, n):
+    x = np.zeros(n)
+    for i in range(n):
+        if A[i][i] == 0:
+            raise Exception("0 value is forbidden on diagonal. Found 0 at {}".format(i))
+
+        B[i] = B[i] / A[i][i]
+        for j in range(n - 1 , -1, -1):
+            A[i][j] = A[i][j] / A[i][i]
+
+        for j in range(i + 1, n):
+            ratio = A[j][i]
+            for k in range(n):
+                A[j][k] -= ratio * A[i][k]
+            B[j] -= ratio * B[i]
+
+    x[n - 1] = B[n - 1] / A[n - 1][n - 1]
+    for i in range(n - 2, -1, -1):
+        x[i] = B[i]
+        for j in range(i + 1, n):
+            x[i] -= A[i][j] * x[j]
+        x[i] = x[i] / A[i][i]
+    print(A)
+    return x
 
 def gauss_pivoting(A, B, n):
     x = np.zeros(n)
@@ -50,7 +76,12 @@ def gauss_pivoting(A, B, n):
     return x
 
 
-A = [[999, 998], [1000, 999]]
-B = [1997, 1999]
-print(simple_gauss(A, B, 2))
-print(gauss_pivoting(A, B, 2))
+A = [[-1, 2, 1], [1, -3, -2], [3, -1, -1]]
+B = [-1, -1, 4]
+print(simple_gauss(A, B, 3))
+A = [[-1, 2, 1], [1, -3, -2], [3, -1, -1]]
+B = [-1, -1, 4]
+print(gauss_pivoting(A, B, 3))
+A = [[-1, 2, 1], [1, -3, -2], [3, -1, -1]]
+B = [-1, -1, 4]
+print(gauss_diagonal(A, B, 3))
