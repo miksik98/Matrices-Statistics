@@ -1,7 +1,16 @@
 import numpy as np
 
+def backward_substitution(A, B, n, x):
+    x[n - 1] = B[n - 1] / A[n - 1][n - 1]
+    for i in range(n - 2, -1, -1):
+        x[i] = B[i]
+        for j in range(i + 1, n):
+            x[i] -= A[i][j] * x[j]
+        x[i] = x[i] / A[i][i]
 
-def simple_gauss(A, B, n):
+def simple_gauss(a, b, n):
+    A = a.copy()
+    B = b.copy()
     x = np.zeros(n)
     for i in range(n):
         if A[i][i] == 0:
@@ -12,24 +21,20 @@ def simple_gauss(A, B, n):
                 A[j][k] -= ratio * A[i][k]
             B[j] -= ratio * B[i]
 
-    x[n - 1] = B[n - 1] / A[n - 1][n - 1]
-    for i in range(n - 2, -1, -1):
-        x[i] = B[i]
-        for j in range(i + 1, n):
-            x[i] -= A[i][j] * x[j]
-        x[i] = x[i] / A[i][i]
-    print(A)
+    backward_substitution(A, B, n, x)
     return x
 
 
-def gauss_diagonal(A, B, n):
+def gauss_diagonal(a, b, n):
+    A = a.copy()
+    B = b.copy()
     x = np.zeros(n)
     for i in range(n):
         if A[i][i] == 0:
             raise Exception("0 value is forbidden on diagonal. Found 0 at {}".format(i))
 
         B[i] = B[i] / A[i][i]
-        for j in range(n - 1 , -1, -1):
+        for j in range(n - 1, -1, -1):
             A[i][j] = A[i][j] / A[i][i]
 
         for j in range(i + 1, n):
@@ -38,16 +43,13 @@ def gauss_diagonal(A, B, n):
                 A[j][k] -= ratio * A[i][k]
             B[j] -= ratio * B[i]
 
-    x[n - 1] = B[n - 1] / A[n - 1][n - 1]
-    for i in range(n - 2, -1, -1):
-        x[i] = B[i]
-        for j in range(i + 1, n):
-            x[i] -= A[i][j] * x[j]
-        x[i] = x[i] / A[i][i]
-    print(A)
+    backward_substitution(A, B, n, x)
     return x
 
-def gauss_pivoting(A, B, n):
+
+def gauss_pivoting(a, b, n):
+    A = a.copy()
+    B = b.copy()
     x = np.zeros(n)
     for i in range(n):
         max = abs(A[i][i])
@@ -67,15 +69,13 @@ def gauss_pivoting(A, B, n):
                 A[k][j] -= ratio * A[i][j]
             B[k] -= ratio * B[i]
 
-    x[n - 1] = B[n - 1] / A[n - 1][n - 1]
-    for i in range(n - 2, -1, -1):
-        x[i] = B[i]
-        for j in range(i + 1, n):
-            x[i] -= A[i][j] * x[j]
-        x[i] = x[i] / A[i][i]
+    backward_substitution(A, B, n, x)
     return x
 
-def LU(A, B, n):
+
+def LU(a, b, n):
+    A = a.copy()
+    B = b.copy()
     L = np.zeros((n, n))
     for i in range(n):
         L[i][i] = 1
@@ -95,12 +95,7 @@ def LU(A, B, n):
             c[i] -= L[i][j] * c[j]
         c[i] = c[i] / L[i][i]
 
-    x[n - 1] = c[n - 1] / A[n - 1][n - 1]
-    for i in range(n - 2, -1, -1):
-        x[i] = c[i]
-        for j in range(i + 1, n):
-            x[i] -= A[i][j] * x[j]
-        x[i] = x[i] / A[i][i]
+    backward_substitution(A, c, n, x)
     return x
 
 
