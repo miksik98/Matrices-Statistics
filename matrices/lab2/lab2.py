@@ -75,6 +75,34 @@ def gauss_pivoting(A, B, n):
         x[i] = x[i] / A[i][i]
     return x
 
+def LU(A, B, n):
+    L = np.zeros((n, n))
+    for i in range(n):
+        L[i][i] = 1
+    x = np.zeros(n)
+    for i in range(n):
+        if A[i][i] == 0:
+            raise Exception("0 value is forbidden on diagonal. Found 0 at {}".format(i))
+        for j in range(i + 1, n):
+            ratio = A[j][i] / A[i][i]
+            L[j][i] = ratio
+            for k in range(n):
+                A[j][k] -= ratio * A[i][k]
+    c = np.zeros(n)
+    for i in range(n):
+        c[i] = B[i]
+        for j in range(0, i):
+            c[i] -= L[i][j] * c[j]
+        c[i] = c[i] / L[i][i]
+
+    x[n - 1] = c[n - 1] / A[n - 1][n - 1]
+    for i in range(n - 2, -1, -1):
+        x[i] = c[i]
+        for j in range(i + 1, n):
+            x[i] -= A[i][j] * x[j]
+        x[i] = x[i] / A[i][i]
+    return x
+
 
 A = [[-1, 2, 1], [1, -3, -2], [3, -1, -1]]
 B = [-1, -1, 4]
@@ -85,3 +113,6 @@ print(gauss_pivoting(A, B, 3))
 A = [[-1, 2, 1], [1, -3, -2], [3, -1, -1]]
 B = [-1, -1, 4]
 print(gauss_diagonal(A, B, 3))
+A = [[-1, 2, 1], [1, -3, -2], [3, -1, -1]]
+B = [-1, -1, 4]
+print(LU(A, B, 3))
