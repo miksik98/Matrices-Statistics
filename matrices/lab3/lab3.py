@@ -1,31 +1,4 @@
-def norm_p(matrix, p):
-    n = len(matrix)
-    if n == 0:
-        return 0
-    if n != len(matrix[0]):
-        raise ValueError("Not square matrix provided: " + matrix)
-    sums = []
-    for row in matrix:
-        sum = 0
-        for number in row:
-            sum += number ** p
-        sums.append(sum)
-    return max(sums) ** (1 / p)
-
-
-def norm_max(matrix):
-    n = len(matrix)
-    if n == 0:
-        return 0
-    if n != len(matrix[0]):
-        raise ValueError("Not square matrix provided: " + matrix)
-    sums = []
-    for i in range(len(matrix[0])):
-        sum = 0
-        for j in range(len(matrix)):
-            sum += matrix[i][j]
-        sums.append(sum)
-    return max(sums)
+import numpy as np
 
 
 def det_2(matrix):
@@ -46,7 +19,7 @@ def inverse_2(matrix):
     if len(matrix) not in [0, 2] or len(matrix[0]) != 2:
         raise ValueError("Not 2x2 matrix provided: " + matrix)
     det = det_2(matrix)
-    return [[matrix[1][1]/det, -matrix[1][0]/det], [-matrix[0][1]/det, matrix[0][0]/det]]
+    return np.array([[matrix[1][1] / det, -matrix[1][0] / det], [-matrix[0][1] / det, matrix[0][0] / det]])
 
 
 def inverse_3(matrix):
@@ -63,17 +36,37 @@ def inverse_3(matrix):
     c20 = det_2([[m[0][1], m[0][2]], [m[1][1], m[1][2]]]) / det
     c21 = -det_2([[m[0][0], m[0][2]], [m[1][0], m[1][2]]]) / det
     c22 = det_2([[m[0][0], m[0][1]], [m[1][0], m[1][1]]]) / det
-    return [[c00, c10, c20],
-            [c01, c11, c21],
-            [c02, c12, c22]]
+    return np.array([[c00, c10, c20],
+                     [c01, c11, c21],
+                     [c02, c12, c22]])
 
 
-A = [[4, 9, 2], [3, 5, 7], [8, 1, 6]]
+def norm(x, p):
+    return np.sum(np.abs(x) ** p, axis=0) ** (1 / p)
 
-B = [[1, 2], [3, 4]]
-print(norm_p(A, 1))
-print(norm_max(A))
-print(det_3(A))
-print(det_2(B))
-print(inverse_2(B))
-print(inverse_3(A))
+
+def matrix_p_norm(A, dim, p):
+    print('ref: ' + str(np.linalg.norm(A, p)))
+
+    x = np.random.randn(dim, 10000)
+    normalized_xs = x / norm(x, p)
+    A_x = A.dot(normalized_xs)
+    print('calc: ' + str(np.max(norm(A_x, p))) + '\n')
+
+
+def calc(dim, p):
+    A = np.random.randn(dim, dim)
+    print(f'{dim}x{dim} p={p}')
+    matrix_p_norm(A, dim, p)
+    if dim == 2:
+        A_inv = inverse_2(A)
+    else:
+        A_inv = inverse_3(A)
+    print(f'inverted {dim}x{dim} p={p}')
+    matrix_p_norm(A_inv, dim, p)
+
+
+calc(2, 1)
+calc(2, 2)
+calc(3, 1)
+calc(3, 2)
