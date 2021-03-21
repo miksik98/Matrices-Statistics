@@ -1,4 +1,5 @@
 import numpy as np
+# import matplotlib.pyplot as pt
 
 
 def det_2(matrix):
@@ -46,11 +47,17 @@ def norm(x, p):
 
 
 def matrix_p_norm(A, dim, p):
-    print('ref: ' + str(np.linalg.norm(A, p)))
+    if p <= 2 or p == np.inf:
+        print('ref: ' + str(np.linalg.norm(A, p)))
 
     x = np.random.randn(dim, 10000)
     normalized_xs = x / norm(x, p)
     A_x = A.dot(normalized_xs)
+    # pt.plot(normalized_xs[0], normalized_xs[1], "o", label="x")
+    # pt.plot(A_x[0], A_x[1], "o", label="Ax")
+    # pt.legend()
+    # pt.gca().set_aspect("equal")
+    # pt.show()
     print('calc: ' + str(np.max(norm(A_x, p))) + '\n')
 
 
@@ -58,6 +65,7 @@ def calc(dim, p):
     A = np.random.randn(dim, dim)
     print(f'{dim}x{dim} p={p}')
     matrix_p_norm(A, dim, p)
+
     if dim == 2:
         A_inv = inverse_2(A)
     else:
@@ -68,5 +76,9 @@ def calc(dim, p):
 
 calc(2, 1)
 calc(2, 2)
+calc(2, 3)
+calc(2, np.inf)
 calc(3, 1)
 calc(3, 2)
+calc(3, 3)
+calc(3, np.inf)
