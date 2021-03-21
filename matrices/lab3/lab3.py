@@ -1,4 +1,6 @@
 import numpy as np
+
+
 # import matplotlib.pyplot as pt
 
 
@@ -42,8 +44,12 @@ def inverse_3(matrix):
                      [c02, c12, c22]])
 
 
-def norm(x, p):
+def norm_p(x, p):
     return np.sum(np.abs(x) ** p, axis=0) ** (1 / p)
+
+
+def norm_max(x, _p):
+    return np.max(np.abs(x), axis=0)
 
 
 def matrix_p_norm(A, dim, p):
@@ -51,6 +57,7 @@ def matrix_p_norm(A, dim, p):
         print('ref: ' + str(np.linalg.norm(A, p)))
 
     x = np.random.randn(dim, 10000)
+    norm = norm_p if p < np.inf else norm_max
     normalized_xs = x / norm(x, p)
     A_x = A.dot(normalized_xs)
     # pt.plot(normalized_xs[0], normalized_xs[1], "o", label="x")
