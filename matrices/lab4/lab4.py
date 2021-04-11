@@ -46,6 +46,12 @@ def svd_(A, epsilon):
     singularValues, us, vs = [np.array(x) for x in zip(*svdSoFar)]
     return us.T, singularValues, vs
 
+def print_solution(U, s, Vh, name):
+    print(name)
+    print("U -> " + str(U))
+    print("s -> " + str(s))
+    print("Vh -> " + str(Vh) + "\n")
+
 
 matrix = np.array([
     [2, -1, 0],
@@ -54,5 +60,7 @@ matrix = np.array([
 ], dtype='float64')
 
 U_, s_, Vh_ = svd_(matrix, 0.001)
+print_solution(U_, s_, Vh_, "our solution")
 
 U, s, Vh = svd(matrix)
+print_solution(U, s, Vh, "numpy solution")

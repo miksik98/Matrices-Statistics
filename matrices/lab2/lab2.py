@@ -98,6 +98,7 @@ def LU(a, b, n):
     backward_substitution(A, c, n, x)
     return x
 
+# Ax = B
 
 A = [[-1, 2, 1], [1, -3, -2], [3, -1, -1]]
 B = [-1, -1, 4]
