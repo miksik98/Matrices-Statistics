@@ -1,0 +1,112 @@
+---
+title: "Lab1"
+author: "Mikołaj Sikora"
+date: "28 04 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#### 0. Przygotowanie datasetu i deklaracja funkcji pomocniczych
+
+```{r}
+# install.packages("ISLR")
+library(ISLR)
+attach(Auto)
+
+avg_mpg <- function(cars){
+  mean(cars$mpg)
+}
+
+acceleration_var <- function(cars) {
+  var(cars$acceleration)
+}
+
+count_cars <- function(cars) {
+  dim(cars)[1]
+}
+
+get_greater_than_mean <- function(attr) {
+  Auto[attr > mean(attr),]
+}
+
+get_less_than_mean <- function(attr) {
+  Auto[attr < mean(attr),]
+}
+```
+
+#### 1. Jakie jest średnie zużycie paliwa (_mpg_) wszystkich samochodów?
+
+```{r}
+avg_mpg(Auto)
+```
+
+#### 2. Jakie jest średnie zużycie paliwa samochodów, które mają 4 cylindry?
+
+```{r}
+avg_mpg(Auto[cylinders == 4,])
+```
+
+#### 3. Jaka jest mediana wagi (_weight_) wszystkich samochodów?
+
+```{r}
+median(weight)
+```
+#### 4. Jakie jest średnie zużycie paliwa samochodów wyprodukowanych w roku 1972?
+
+```{r}
+avg_mpg(Auto[year == 72,])
+```
+
+#### 5. Jaka jest wariancja przyspieszenia (_acceleration_) wszystkich samochodów?
+
+```{r}
+acceleration_var(Auto)
+```
+
+#### 6. Jaka jest wariancja przyspieszenia samochodów japońskich (patrz _origin_)?
+
+```{r}
+acceleration_var(Auto[origin == 3,])
+```
+
+#### 7. Ile jest samochodów, których moc (horsepower) jest powyżej średniej?
+
+```{r}
+count_cars(get_greater_than_mean(horsepower))
+```
+#### 8. Jaka jest maksymalna moc samochodów, których waga jest poniżej średniej?
+
+```{r}
+max(get_less_than_mean(weight)$horsepower)
+```
+#### 9. Ile jest samochodów, których zużycie paliwa jest poniżej średniej (czyli _mpg_ jest powyżej średniej)?
+
+```{r}
+count_cars(get_greater_than_mean(mpg))
+```
+
+#### 10. Jaka jest minimalna liczba cylindrów samochodów, których zużycie paliwa jest poniżej średniej?
+
+```{r}
+min(get_greater_than_mean(mpg)$cylinders)
+```
+
+#### 11. Ile jest samochodów o maksymalnej pojemności silnika (_displacement_)?
+
+```{r}
+max_displacement = max(displacement)
+count_cars(Auto[displacement == max_displacement,])
+```
+
+#### 12. Jaka jest maksymalna waga (_weight_) samochodów, których pojemność silnika jest mniejsza od jej mediany?
+
+```{r}
+med_displacement = median(displacement)
+max(Auto[displacement < med_displacement,]$weight)
+```
+
+
+
+

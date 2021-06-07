@@ -1,0 +1,14 @@
+---
+title: "Projekt"
+author: "Mikołaj Sikora, Anna Banaszak"
+date: "14 06 2021"
+output:
+  html_document: default
+---
+
+## Załadowanie zbioru danych
+
+```{r load_dataset}
+data = read.csv(".\\WA_Fn-UseC_-Telco-Customer-Churn.csv")
+dim(data)
+```

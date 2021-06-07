@@ -1,0 +1,54 @@
+---
+title: "Lab2"
+author: "Mikołaj Sikora"
+date: "23 05 2021"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+library(MASS)
+library(ISLR)
+library(class)
+train <- Smarket$Year < 2005
+Smarket_test <- Smarket[!train,]
+Direction_test <- Smarket$Direction[!train]
+```
+
+## Regresja logistyczna
+
+
+```{r logistic}
+dir_log_t <- list()
+dir_log_t$fit <- glm(Direction ~ Lag1 + Lag2, family = binomial, data = Smarket, subset = train)
+dir_log_t$probs <- predict(dir_log_t$fit, Smarket_test, type = "response")
+dir_log_t$predicted <- ifelse(dir_log_t$probs > 0.5, "Up", "Down")
+1-dir_log_t$probs[8]
+```
+
+## LDA
+
+```{r lda}
+dir_lda <- list()
+dir_lda$fit <- lda(Direction ~ Lag1 + Lag2, data = Smarket, subset = train)
+dir_lda$predicted <- predict(dir_lda$fit, Smarket_test)
+dir_lda$predicted$posterior[, 1][8]
+```
+
+## QDA
+
+```{r qda}
+dir_qda <- list()
+dir_qda$fit <- qda(Direction ~ Lag1 + Lag2, data = Smarket, subset = train)
+dir_qda$predicted <- predict(dir_qda$fit, Smarket_test)
+dir_qda$predicted$posterior[, 1][8]
+```
+
+## kNN
+
+```{r knn}
+train_set <- Smarket[train, c("Lag1", "Lag2")]
+test_set <- Smarket[!train, c("Lag1", "Lag2")]
+Direction_train <- Smarket$Direction[train]
+dir_knn_1 <- knn(train_set, test_set, Direction_train, k = 4, prob=TRUE)
+1-attributes(.Last.value)$prob[8]
+```

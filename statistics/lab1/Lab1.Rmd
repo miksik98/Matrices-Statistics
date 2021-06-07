@@ -1,0 +1,24 @@
+---
+title: "Lab1"
+author: "Mikołaj Sikora"
+date: "16 05 2021"
+output:
+  html_document: default
+---
+
+```{r}
+library(MASS)
+```
+
+## Zadanie 1
+Porównując p-value za pomocą **anova** nie można odrzucić hipotezy zerowej, że oba modele dają podobne wyniki (p-value > 0.05). Można zaobserwować różnicę w wartościach RSE (fit_li$sigma), przy czym wyższą wartość RSE ma _model stosujący wielomian stopnia 5_.
+
+```{r}
+fit_l5 <- lm(medv ~ poly(lstat, 5), data = Boston)
+fit_l6 <- lm(medv ~ poly(lstat, 6), data = Boston)
+anova(fit_l5, fit_l6)
+summary(fit_l5)$sigma
+summary(fit_l6)$sigma
+```
+
+### Mikołaj Sikora
