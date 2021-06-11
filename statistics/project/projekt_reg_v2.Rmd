@@ -1,0 +1,97 @@
+---
+title: "Projekt"
+author: "Mikołaj Sikora, Anna Banaszak"
+date: "14 06 2021"
+output:
+  html_document: default
+---
+```{r}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+library(ISLR)
+library(splines)
+library(gam)
+library(foreach)
+library(randomForest)
+library(boot)
+```
+
+## Załadowanie zbioru danych
+
+```{r load_dataset}
+data_raw = read.csv("./student-mat.csv")
+data <- na.omit(data_raw)
+data
+```
+### Przygotowanie danych
+
+
+```{r divide_into_test_train}
+sample_size = floor(0.7*nrow(data))
+set.seed(43)
+
+# randomly split data in r
+train = sample(seq_len(nrow(data)),size = sample_size)
+data_train = data[train,]
+data_test = data[-train,]
+data_train <- na.omit(data_train)
+```
+
+## Regresja
+### Regresja liniowa
+
+```{r simple linear regression}
+fit_simple <- lm(G3 ~. , data = data, subset = train)
+summary(fit_simple)
+```
+
+```{r lin_mse}
+mean((data_test$G3 - predict(fit_simple, data_test)) ^ 2)
+```
+### K-fold cross validation
+
+```{r}
+model <- glm(G3 ~ ., data = data)
+cv.glm(data, model, K=5)$delta[1]
+```
+### GAM lm()
+
+```{r gamls}
+fit_gam_ls <- lm(G3 ~ ns(G2, df = 3) + ns(absences, df = 3) + romantic, data = data, subset= train)
+summary(fit_gam_ls)
+```
+```{r lin_gam_ln}
+mean((data_test$G3 - predict(fit_gam_ls, data_test)) ^ 2)
+```
+
+### RandomForest
+```{r gambf}
+rf <- randomForest(G3 ~ ., data = data_train, mtry = 15, importance = TRUE)
+rf
+```
+
+
+```{r gambfplot_}
+plot(rf, type = "l")
+```
+### Funkcje sklejane
+
+```{r bsFixedKnots_}
+ms_lims <- range(data$G2)
+ms_grid <- seq(ms_lims[1], ms_lims[2])
+fit_bs_knots <- lm(G3 ~ bs(G2, knots = c(25, 40, 60)), data = data)
+pred_bs_knots <- predict(fit_bs_knots, list(G2 = ms_grid), se.fit = TRUE)
+plot(data$G2, data$G3, cex = 0.5, col = "darkgrey")
+lines(ms_grid, pred_bs_knots$fit, col = "red", lwd = 2)
+lines(ms_grid, pred_bs_knots$fit + 2 * pred_bs_knots$se.fit, col = "red",
+      lty = "dashed")
+lines(ms_grid, pred_bs_knots$fit - 2 * pred_bs_knots$se.fit, col = "red",
+      lty = "dashed")
+abline(v = c(25, 40, 60), lty = "dotted")
+```
+```{r bsFixedKnots}
+summary(fit_bs_knots)
+```
+
+```{r mse_splines_}
+mean((data_test$G3 - predict(fit_bs_knots, data_test)) ^ 2)
+```
