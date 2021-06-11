@@ -1,0 +1,130 @@
+---
+title: "Projekt"
+author: "Mikołaj Sikora, Anna Banaszak"
+date: "14 06 2021"
+output:
+  html_document: default
+---
+```{r}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+library(ISLR)
+library(splines)
+library(gam)
+library(foreach)
+library(randomForest)
+library(boot)
+```
+
+## Załadowanie zbioru danych
+
+```{r load_dataset}
+data_raw = read.csv("./WA_Fn-UseC_-Telco-Customer-Churn.csv")
+data_raw = subset(data_raw, select = -c(customerID))
+data <- na.omit(data_raw)
+data
+```
+### Przygotowanie danych
+
+```{r select data for tenure regression}
+churned <- data$Churn == "Yes"
+data_churned <- data[churned,]
+dim(data_churned)
+```
+
+```{r divide_into_test_train_churned}
+sample_size_churned = floor(0.7*nrow(data_churned))
+set.seed(43)
+
+# randomly split data in r
+train_churned = sample(seq_len(nrow(data_churned)),size = sample_size_churned)
+data_churned_train = data_churned[train_churned,]
+data_churned_test = data_churned[-train_churned,]
+data_churned_train <- na.omit(data_churned_train)
+```
+
+```{r divide_into_test_train}
+sample_size = floor(0.7*nrow(data))
+set.seed(43)
+
+# randomly split data in r
+train = sample(seq_len(nrow(data)),size = sample_size)
+data_train = data_churned[train,]
+data_test = data_churned[-train,]
+data_train <- na.omit(data_train)
+```
+
+## Regresja
+### Regresja liniowa dla tenure
+
+```{r simple linear regression}
+fit_simple <- lm(tenure ~ MonthlyCharges + Contract , data = data_churned, subset = train_churned)
+summary(fit_simple)
+```
+
+```{r lmPlot}
+plot(data_churned_train$MonthlyCharges, data_churned_train$tenure)
+abline(fit_simple)
+```
+```{r lin_mse}
+mean((data_churned_test$tenure - predict(fit_simple, data_churned_test)) ^ 2)
+```
+### K-fold dla tenure
+
+```{r}
+model <- glm(tenure ~ MonthlyCharges + Contract, data = data)
+cv.glm(data, model, K=5)$delta[1]
+```
+## GAM lm() dla tenure
+
+```{r gamls}
+fit_gam_ls <- lm(tenure ~ ns(MonthlyCharges, df = 3) + ns(TotalCharges, df = 3) + Contract + OnlineBackup + PhoneService + Dependents + TechSupport, data = data_churned, subset= train_churned)
+summary(fit_gam_ls)
+```
+```{r lin_gam_ln}
+mean((data_churned_test$tenure - predict(fit_gam_ls, data_churned_test)) ^ 2)
+```
+
+### RandomForest dla tenure
+```{r gambf}
+rf <- randomForest(tenure ~ ., data = data_train, mtry = 15, importance = TRUE)
+rf
+```
+
+
+```{r gambfplot_}
+plot(rf, type = "l")
+```
+### GAM dla tenure
+```{r gambf_tenure}
+fit_gam_bf <- gam(tenure ~ s(MonthlyCharges, df = 4) + s(TotalCharges, df = 3) + Contract + OnlineBackup + PhoneService + Dependents, data = data_churned, subset=train_churned)
+summary(fit_gam_bf)
+```
+```{r lin_gam_ln_}
+mean((data_churned_test$tenure - predict(fit_gam_bf, data_churned_test)) ^ 2)
+```
+
+```{r gambfplot}
+plot(fit_gam_bf, col = "red", se = TRUE)
+```
+## Funkcje sklejane dla tenure
+
+```{r bsFixedKnots_}
+ms_lims <- range(data_churned$MonthlyCharges)
+ms_grid <- seq(ms_lims[1], ms_lims[2])
+fit_bs_knots <- lm(tenure ~ bs(MonthlyCharges, knots = c(25, 40, 60)), data = data_churned)
+pred_bs_knots <- predict(fit_bs_knots, list(MonthlyCharges = ms_grid), se.fit = TRUE)
+plot(data_churned$MonthlyCharges, data_churned$tenure, cex = 0.5, col = "darkgrey")
+lines(ms_grid, pred_bs_knots$fit, col = "red", lwd = 2)
+lines(ms_grid, pred_bs_knots$fit + 2 * pred_bs_knots$se.fit, col = "red",
+      lty = "dashed")
+lines(ms_grid, pred_bs_knots$fit - 2 * pred_bs_knots$se.fit, col = "red",
+      lty = "dashed")
+abline(v = c(25, 40, 60), lty = "dotted")
+```
+```{r bsFixedKnots}
+summary(fit_bs_knots)
+```
+
+```{r mse_splines_}
+mean((data_churned_test$tenure - predict(fit_bs_knots, data_churned_test)) ^ 2)
+```
