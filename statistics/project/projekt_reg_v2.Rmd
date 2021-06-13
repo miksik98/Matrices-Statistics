@@ -1,43 +1,72 @@
 ---
 title: "Projekt"
 author: "Mikołaj Sikora, Anna Banaszak"
-date: "14 06 2021"
+date: "14/06/2021"
 output:
   html_document: default
 ---
 ```{r}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
 library(ISLR)
 library(splines)
 library(gam)
 library(foreach)
 library(randomForest)
 library(boot)
+library(leaps)
+library(tree)
 ```
 
-## Załadowanie zbioru danych
+# Załadowanie zbioru danych
 
 ```{r load_dataset}
 data_raw = read.csv("./student-mat.csv")
 data <- na.omit(data_raw)
-data
+head(data)
 ```
-### Przygotowanie danych
-
+# Przygotowanie danych
 
 ```{r divide_into_test_train}
 sample_size = floor(0.7*nrow(data))
 set.seed(43)
 
-# randomly split data in r
 train = sample(seq_len(nrow(data)),size = sample_size)
 data_train = data[train,]
 data_test = data[-train,]
 data_train <- na.omit(data_train)
 ```
 
-## Regresja
-### Regresja liniowa
+# Regresja
+## Korelacja danych numerycznych dla regresji
+
+```{r cor}
+heatmap(cor(data[c("age", "Medu", "Fedu", "traveltime", "studytime", "failures", "famrel", "freetime", "goout", "Dalc", "Walc", "health", "absences", "G1", "G2", "G3")]))
+```
+
+```{r corelation}
+c <- cor(data[c("age", "Medu", "Fedu", "traveltime", "studytime", "failures", "famrel", "freetime", "goout", "Dalc", "Walc", "health", "absences", "G1", "G2", "G3")])
+c["G3", ]
+```
+## Ocena istotności predyktorów dla regresji
+
+```{r bestSubsets_klas}
+data_bs <- regsubsets(G3 ~ ., data = data, nvmax=12)
+sum <- summary(data_bs)
+sum
+```
+
+```{r bic_min}
+bic_min <- which.min(sum$bic)
+bic_min
+sum$bic[bic_min]
+```
+```{r bestBICPlot}
+plot(sum$bic, xlab = "Liczba zmiennych", ylab = "BIC", col = "green",
+     type = "b", pch = 20)
+points(bic_min, sum$bic[bic_min], col = "red", pch = 9)
+```
+
+## Regresja liniowa
 
 ```{r simple linear regression}
 fit_simple <- lm(G3 ~. , data = data, subset = train)
@@ -47,23 +76,27 @@ summary(fit_simple)
 ```{r lin_mse}
 mean((data_test$G3 - predict(fit_simple, data_test)) ^ 2)
 ```
-### K-fold cross validation
+## K-fold cross validation
 
 ```{r}
 model <- glm(G3 ~ ., data = data)
 cv.glm(data, model, K=5)$delta[1]
 ```
-### GAM lm()
+## GAM
 
-```{r gamls}
-fit_gam_ls <- lm(G3 ~ ns(G2, df = 3) + ns(absences, df = 3) + romantic, data = data, subset= train)
-summary(fit_gam_ls)
+```{r gam}
+fit_gam <- gam(G3 ~ s(G2, df = 3) + s(G1, df = 3) + s(age, df = 2) + s(absences, df = 2) + famrel, data = data, subset= train)
+summary(fit_gam)
 ```
 ```{r lin_gam_ln}
-mean((data_test$G3 - predict(fit_gam_ls, data_test)) ^ 2)
+mean((data_test$G3 - predict(fit_gam, data_test)) ^ 2)
+```
+```{r gambfplot}
+
+plot(fit_gam, col = "red", se = TRUE)
 ```
 
-### RandomForest
+## RandomForest
 ```{r gambf}
 rf <- randomForest(G3 ~ ., data = data_train, mtry = 15, importance = TRUE)
 rf
@@ -73,12 +106,24 @@ rf
 ```{r gambfplot_}
 plot(rf, type = "l")
 ```
-### Funkcje sklejane
+```{r medvbagvalid}
+pred_bag <- predict(rf, newdata = data_test)
+mean((pred_bag - data_test$G3)^2)
+```
+```{r}
+varImpPlot(rf)
+```
+
+```{r}
+importance(rf)
+```
+
+## Funkcje sklejane
 
 ```{r bsFixedKnots_}
 ms_lims <- range(data$G2)
 ms_grid <- seq(ms_lims[1], ms_lims[2])
-fit_bs_knots <- lm(G3 ~ bs(G2, knots = c(25, 40, 60)), data = data)
+fit_bs_knots <- lm(G3 ~ bs(G2), data = data)
 pred_bs_knots <- predict(fit_bs_knots, list(G2 = ms_grid), se.fit = TRUE)
 plot(data$G2, data$G3, cex = 0.5, col = "darkgrey")
 lines(ms_grid, pred_bs_knots$fit, col = "red", lwd = 2)
@@ -94,4 +139,86 @@ summary(fit_bs_knots)
 
 ```{r mse_splines_}
 mean((data_test$G3 - predict(fit_bs_knots, data_test)) ^ 2)
+```
+
+# Klasyfikacja
+
+``` {r train_glm_}
+data_train$good = data_train$G3 > 10
+data_test$good = data_test$G3 > 10
+data$good = data$G3 > 10
+```
+
+## Korelacja danych numerycznych dla klasyfikacji
+
+```{r cor_klas}
+heatmap(cor(data[c("age", "Medu", "Fedu", "traveltime", "studytime", "failures", "famrel", "freetime", "goout", "Dalc", "Walc", "health", "absences", "good")]))
+```
+
+## Ocena istotności predyktorów dla klasyfikacji
+```{r bestSubsets}
+data_bs <- regsubsets(good ~ . - G1 - G2 - G3, data = data, nvmax=12)
+sum <- summary(data_bs)
+sum
+```
+```{r bic_min_klas}
+bic_min <- which.min(sum$bic)
+bic_min
+sum$bic[bic_min]
+```
+
+## GLM
+
+``` {r train_glm}
+dir_log_t <- list()
+dir_log_t$fit <- glm(good ~ Mjob + failures + schoolsup + goout, family = binomial, data = data_train)
+summary(dir_log_t$fit)
+```
+``` {r test_glm}
+dir_log_t$probs <- predict(dir_log_t$fit, data_test, type="response")
+dir_log_t$predicted <- ifelse(dir_log_t$probs > 0.5, TRUE, FALSE)
+dir_log_t$cm <- table(dir_log_t$predicted, data_test$good)
+dir_log_t$cm
+```
+``` {r error_glm}
+mean(dir_log_t$predicted != data_test$good)
+```
+
+## KNN
+
+``` {r knn}
+library(class)
+train_set <- data_train[c("absences", "failures")]
+test_set <- data_test[c("absences", "failures")]
+dir_knn <- knn(train_set, test_set, data_train$good, k = 3)
+table(dir_knn, data_test$good)
+```
+``` {r knn error}
+mean(dir_knn != data_test$good)
+```
+
+
+## Drzewo decyzyjne
+
+
+``` {r tree}
+
+data_train$good = factor(ifelse(data_train$G3 > 10, "Good", "Bad"))
+data_test$good = factor(ifelse(data_test$G3 > 10, "Good", "Bad"))
+data$good = factor(ifelse(data$G3 > 10, "Good", "Bad"))
+
+t <- tree(good ~ failures + Medu + Fedu + absences, data = data_train)
+summary(t)
+```
+``` {r tree 2}
+plot(t)
+text(t, pretty=0)
+```
+``` {r tree test}
+tree_class <- predict(t, newdata = data_test, type = "class")
+cm <- table(tree_class, data_test$good)
+cm
+```
+``` {r tree error}
+mean(tree_class  != data_test$good)
 ```
