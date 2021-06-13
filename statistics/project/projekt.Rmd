@@ -9,20 +9,72 @@ output:
 ## Załadowanie zbioru danych
 
 ```{r load_dataset}
-data = read.csv(".\\WA_Fn-UseC_-Telco-Customer-Churn.csv")
-dim(data)
+data_raw = read.csv("./student-mat.csv")
+data <- na.omit(data_raw)
+data
+data$good = data$G3 > 10
+data
 ```
+## Podział zbioru na zbiór treningowy i testowy
 
 ```{r divide_into_test_train}
-data$categorization = substr(data$customerID, 0, 4) > "2500"
-train <- data$categorization == TRUE
-data_train <- data[train,]
-data_test <- data[!train,]
-data_train = subset(data_train, select = -c(categorization, customerID))
-data_test = subset(data_test, select = -c(categorization, customerID))
-mean(data_test$MonthlyCharges)
-mean(data_train$MonthlyCharges)
-dim(data_train)[1] / dim(data_test)[1]
-dim(data_train)
-dim(data_test)
+sample_size = floor(0.7*nrow(data))
+set.seed(43)
+
+# randomly split data in r
+train = sample(seq_len(nrow(data)),size = sample_size)
+data_train = data[train,]
+data_test = data[-train,]
+data_train <- na.omit(data_train)
+```
+
+## GLM
+
+``` {r train_glm}
+dir_log_t <- list()
+dir_log_t$fit <- glm(good ~ Fedu + Mjob + failures + schoolsup, family = binomial, data = data_train)
+summary(dir_log_t$fit)
+```
+``` {r test_glm}
+dir_log_t$probs <- predict(dir_log_t$fit, data_test, type="response")
+dir_log_t$predicted <- ifelse(dir_log_t$probs > 0.5, TRUE, FALSE)
+dir_logistic$cm <- table(dir_log_t$predicted, data_test$good)
+dir_logistic$cm
+```
+``` {r error_glm}
+mean(dir_log_t$predicted != data_test$good)
+```
+
+## KNN
+
+``` {r knn}
+library(class)
+train_set <- data_train[c("absences", "failures")]
+test_set <- data_test[c("absences", "failures")]
+dir_knn <- knn(train_set, test_set, data_train$good, k = 3)
+table(dir_knn, data_test$good)
+```
+``` {r knn error}
+mean(dir_knn != data_test$good)
+```
+
+
+## Drzewo decyzyjne
+
+``` {r tree}
+library(tree)
+t <- tree(good ~ failures + Fedu + absences + schoolsup, data = data_train)
+summary(t)
+```
+``` {r tree 2}
+plot(t)
+text(t, pretty=0)
+```
+``` {r tree test}
+tree_class <- predict(t, newdata = data_test)
+dir_logistic$cm <- table(tree_class > 0.5, data_test$good)
+dir_logistic$cm
+```
+``` {r tree error}
+mean(dir_log_t$predicted != data_test$good)
 ```
